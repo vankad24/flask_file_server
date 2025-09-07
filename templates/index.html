@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<link rel="icon" href="/favicon.svg" />
+    <link type="text/css" href="/file_server_style.css" rel="stylesheet">	
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{{current_path}}</title>
+	
+</head>
+<body>
+	<style>
+		body {
+	font-family: Arial, sans-serif;
+	margin: 0;
+	padding: 0;
+	background-color: #f9f9f9;
+}
+
+header {
+	background-color: #333;
+	color: #fff;
+	padding: 10px;
+	text-align: center;
+}
+
+main {
+	max-width: 800px;
+	margin: 20px auto;
+	background-color: #fff;
+	padding: 20px;
+	border-radius: 8px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+	font-size: 20px;
+}
+
+.container {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+}
+
+.container>a {
+	text-decoration: none;
+	color: #333;
+	border-radius: 8px;
+	padding: 6px 0px 8px 12px;
+
+	user-drag: none;
+	-webkit-user-drag: none;
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+
+}
+
+.container>a:hover {
+	background-color: #ddd;
+}
+
+.item-name:hover{
+  text-decoration: underline;
+}
+
+.container>a>span:first-child{
+  user-select: none;
+  margin-right: 6px;
+}
+
+.back {
+	background-color: #c9c9c9;
+	display: inline-block;
+}
+.empty-folder{
+	text-align: center;
+}
+.welcome-gif{
+	margin: auto;
+	display: block;
+	border-radius: 10px;
+	margin-top: 12px;
+	width: 34%;
+}
+
+#upload-container {
+	display: none;
+	width: 40%;
+	position: absolute;
+	top: 20%;
+	left: 50%;
+	transform: translate(-50%);
+	background-color: #ffffff;
+	padding: 8px 20px 24px 20px;
+	border-radius: 12px;
+	box-shadow: 0 0 10px rgb(0 0 0 / 20%);
+}
+
+#drop-area {
+	border: 2px dashed #aaa;
+	border-radius: 8px;
+	padding: 20px;
+	text-align: center;
+	cursor: pointer;
+	min-height: 11vh;
+	margin: 16px 2px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: 4px;
+}
+
+#drop-area:hover {
+	border-color: #888;
+}
+
+#file-input {
+	display: none;
+}
+
+#send-button {
+	color: #000;
+	font-size: 20px;
+	background-color: #bbbbbb;
+	border: none;
+	border-radius: 26px;
+	padding: 8px 18px;
+	cursor: pointer;
+	display: block;
+	margin: auto;
+	margin-top: 14px;
+}
+#close-button {
+	color: #000;
+	font-size: 28px;
+	background: none;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;
+	margin-left: auto;
+	display: block;
+}
+#open-button {
+	border: none;
+	color: #fcfcfc;
+	background-color: #454545;
+	border-radius: 20px;
+	padding: 7px 40px;
+	width: fit-content;
+	font-size: 20px;
+	margin: auto;
+	margin-bottom: 10px;
+}
+.progress-bar{
+	width: 0%;
+	background-color: #808080;
+	height: inherit;
+}
+.upload-hint {
+	font-size: 20px;
+}
+.upload-row {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	background-color: #d7d7d7;
+	border-radius: 22px;
+	padding: 4px 2px;
+	width: 70%;
+	margin: auto;
+}
+.text-percent {
+	font-size: 14px;
+	color: #000;
+	font-weight: bold;
+}
+.file-name {
+    font-size: 18px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    max-width: 90%;
+}
+.progress {
+/*	display: flex;
+	visibility: hidden;*/
+	display: none;
+	align-items: center;
+	flex-direction: row;
+	justify-content: center;
+	gap: 4px;
+	width: 55%;
+	margin-left: 36px;
+}
+.progress-bar-container {
+	width: 100%;
+	border: gray 1px solid;
+	height: 4px;
+	border-radius: 8px;
+	overflow: hidden;
+}
+	</style>
+	<header>
+		<h1>{{current_path}}</h1>
+	</header>
+	{% if not back_path %}
+		<img class="welcome-gif" src="https://media1.tenor.com/m/_0oaSG6tgPgAAAAC/welcome-anime.gif">
+	{% endif %}
+	<main>
+
+		<div class="container">
+			{% if allow_upload %}
+				<button id="open-button" onclick="openUpload()">Загрузить ⇧</button>
+			{% endif %}
+			{% if back_path %}
+				<a class="back" href="{{back_path}}"><span>&#8592;</span><span class="item-name">Назад</span></a>
+			{% endif %}
+			{% if not dirs and not files %}
+				<div class="empty-folder">В этой папке пусто &#128269;</div>
+			{% else %}
+				{% for dir in dirs %}
+					<a href="{{dir[0]}}"><span>&#128193;</span><span class="item-name">{{dir[1]}}</span></a>
+				{% endfor %}
+				{% for file in files %}
+					<a href="{{file[0]}}"><span>&#128196;</span><span class="item-name">{{file[1]}}</span></a>
+				{% endfor %}
+			{% endif %}
+		</div>
+	</main>
+
+	{% if allow_upload %}
+	<div id="upload-container" ondragover="allowDrop(event)" ondrop="dropHandler(event)">
+	   	<button id="close-button" onclick="closeUpload()">✖</button>
+	   	<div id="drop-area" onclick="file_input.click();"></div>
+		<input type="file" id="file-input" onchange="fileSelected()" multiple>
+		<button id="send-button" onclick="sendFiles()">Отправить</button>
+		
+	</div>
+	<script>
+		const file_input = document.getElementById('file-input')
+const upload_container = document.getElementById('upload-container');
+const drop_area = document.getElementById('drop-area');
+var new_files_uploaded = false;
+
+setUploadHint()
+
+document.addEventListener('dragenter', function (event) {
+	openUpload()
+	// console.log('dragenter')
+});
+
+document.addEventListener('keydown', function(event) {
+	if (event.key === 'Escape' || event.keyCode === 27) {
+		closeUpload()
+	}
+});
+
+function closeUpload(){
+	upload_container.style.display = 'none';
+	if (new_files_uploaded) {
+		//reload the page
+		location.reload();
+	}
+}
+function openUpload(){
+	upload_container.style.display = 'block';
+}
+
+function setUploadHint(){
+	drop_area.innerHTML = '<div class="upload-hint">Перетащите файл или нажмите сюда 📎</div>'
+}
+
+function allowDrop(event) {
+	event.preventDefault();
+	// drop_area.style.borderColor = '#888';
+	// console.log('allowDrop')
+
+}
+
+function dropHandler(event) {
+	event.preventDefault();
+
+	file_input.files = event.dataTransfer.files;
+	fileSelected()
+}
+
+function fileSelected() {
+	files = file_input.files;
+	if (files.length > 0) {
+		let result = ""
+		for (const file of files) {
+			result += `<div class="upload-row"><div class="file-name">${file.name}</div><div class="progress"><div class="progress-bar-container"><div class="progress-bar"></div></div><div class="text-percent">0%</div></div></div>`;
+		}
+		drop_area.innerHTML = result;
+	} else {
+		setUploadHint()
+	}
+	// console.log('fileSelected')
+}
+
+function sendFiles() {
+	const files = file_input.files;
+	
+	if (files.length > 0) {
+		let current_path = window.location.href.replace(window.location.origin, '').substr(1)
+		let elements = drop_area.children
+		for (let el of drop_area.getElementsByClassName('progress')){
+			el.style.display = "flex";
+		}
+		for (let i = 0; i < files.length; i++) {
+			const formData = new FormData();
+			formData.append('file', files[i]);
+			formData.append('path', current_path);
+
+			let xhr = new XMLHttpRequest();
+
+			const progress_bar = elements[i].querySelector('.progress-bar');
+			const text_percent = elements[i].querySelector('.text-percent');
+			xhr.upload.addEventListener('progress', function (event) {
+				if (event.lengthComputable) {
+					const percentComplete = Math.floor((event.loaded / event.total) * 100);
+					updateUploadProgress(progress_bar, text_percent, percentComplete);
+				}
+			});
+
+			xhr.addEventListener('load', function () {
+				if (xhr.status >= 200 && xhr.status < 300) {
+					// console.log('Load successful', xhr.response);
+					finishUploadProgress(progress_bar, text_percent, "#3f3", "100%");
+					new_files_uploaded = true;
+				} else {
+					// console.log('Load error');
+					finishUploadProgress(progress_bar, text_percent, "#f33", "Error");
+
+				}
+				// console.log(`Load finished ${xhr.status}`);
+			});
+
+			xhr.addEventListener('error', function () {
+				// console.log('Load error');
+				finishUploadProgress(progress_bar, text_percent, "#f33", "Error");
+			});
+			xhr.addEventListener('timeout', function () {
+				// console.log('Load timeout');
+				finishUploadProgress(progress_bar, text_percent, "#edff33", "Timeout");
+
+			});
+
+			xhr.open('POST', '/upload', true);
+			xhr.send(formData);
+		}
+	}
+}
+
+function finishUploadProgress(progress_bar, text_percent, color, result){
+	progress_bar.style.width = '100%';
+	text_percent.textContent = result;
+	progress_bar.style.backgroundColor = color;
+}
+
+function updateUploadProgress(progress_bar, text_percent, percent){
+	progress_bar.style.width = percent + '%';
+	text_percent.textContent = percent;
+}
+	</script>
+	{% endif %}
+</body>
+</html>
